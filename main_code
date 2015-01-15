@@ -1,0 +1,324 @@
+
+
+
+#include <iostream>
+#include <stdlib.h>
+#include<math.h>
+#ifdef __APPLE__
+#include <OpenGL/OpenGL.h>
+#include <GLUT/glut.h>
+#else
+#include <GL/glut.h>
+#endif
+#define PI 3.142f
+#define e 2.71f
+
+GLfloat angleX = 90.0f, angleY = 0.0f, angleZ = 0.0f, vertexes[4][3], normal[3], zoom = -40.0f;
+
+using namespace std;
+
+void handleKeypress(unsigned char key, int x, int y) {
+	switch (key) {
+
+	case 27: //Escape key
+		exit(0);
+		break;
+
+	case 'x':
+
+		angleX += 10.0;
+		glutPostRedisplay();
+		break;
+
+	case 'y':
+		angleY += 10.0;
+		glutPostRedisplay();
+		break;
+
+	case 'z':
+		angleZ += 10.0;
+		glutPostRedisplay();
+		break;
+
+	case 'd':
+		zoom += 10.0f;
+		glutPostRedisplay();
+		break;
+
+	case 'f':
+		zoom += 10.0f;
+		glutPostRedisplay();
+		break;
+
+	case 'g':
+		zoom -= 10.0f;
+		glutPostRedisplay();
+		break;
+	}
+}
+
+struct Vector{
+	GLfloat x, y, z;
+};
+
+void normalize(float vector[3])
+{
+	float length;
+
+	length = (float)sqrt((vector[0] * vector[0]) + (vector[1] * vector[1]) + (vector[2] * vector[2]));
+
+	if (length == 0.0f)
+		length = 1.0f;
+
+	vector[0] /= length;
+	vector[1] /= length;
+	vector[2] /= length;
+
+	glNormal3f(vector[0],vector[1],vector[2]);
+}
+
+
+void computeNormals(Vector c1,Vector c2,Vector c3 )
+{
+	float v1[3], v2[3];
+	float n[3];
+	//Vector1
+
+	v1[0] = c1.x - c2.x;
+	v1[1] = c1.y - c2.y;
+	v1[2] = c1.z - c2.z;
+
+	//Vector2
+
+	v2[0] = c2.x - c3.x;
+	v2[1] = c2.y - c3.y;
+	v2[2] = c2.z - c3.z;
+
+	//Normal
+
+	n[0] = v1[1] * v2[2] - v1[2] * v2[1];
+	n[1] = v1[2] * v2[0] - v2[2] * v1[0];
+	n[2] = v1[0] * v2[1] - v1[1] * v2[0];
+
+	normalize(n);
+
+}
+
+
+
+void drawHelix()
+{
+	GLfloat x, y1, z1,y2,y3,y4,z2,z3,z4, phi, v, u, r;
+	int twists = 10;
+	GLint theta;
+
+	GLfloat matColor[] = { 0.9f, 0.9f, 0.8f, 1.0f };
+	GLfloat matSpecular[] = { 0.2f, 5.0f, 2.0f, 1.0f };
+	GLfloat shininess[] = { 50.0 };
+
+	glLoadIdentity();
+
+	gluLookAt(0, 5, 50, 0, 0, 0, 0, 1, 0);
+
+	glPushMatrix();
+
+	glTranslatef(0, 0,-50);
+	/*glRotatef(angle / 2.0f, 1, 0, 0);
+	glRotatef(angle / 3.0f, 0, 1, 0);
+	*/
+	//glRotatef(angleX, 1, 0, 0);
+	glRotatef(0, 0, 1,0 );
+	//glRotatef(angleZ, 0, 0, 1);
+
+	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, matColor);
+	glMaterialfv(GL_FRONT, GL_SPECULAR, matSpecular);
+	glMaterialfv(GL_FRONT,GL_SHININESS,shininess);
+	
+	GLfloat yMax1,yMax2;
+
+	Vector v1, v2, v3;
+
+	for (x = -4; x < 4; x+=0.01){
+		
+		
+		//Enter ymax1=f(x).Here f(x) is x^2.ymax2=f(x+0.01).
+		
+		yMax1 = x*x;
+		yMax2 = (x + 0.01)*(x + 0.01);
+		//cout << yMax<<"\t";
+		for (theta = 0; theta <= 360; theta += 5){
+
+
+			/*y1 =yMax*cos(theta*PI/180);
+			y2 = yMax*cos((theta + 10)*PI/180);
+			z1 = yMax*sin(theta*PI/180);
+			z2 = yMax*sin((theta+10)*PI/180);
+			*/
+
+			y1 =yMax1*cos(theta*PI/180);
+			y3 = yMax1*cos((theta+5)*PI / 180);
+
+			y2 = yMax2*cos((theta)*PI/180);
+			y4 = yMax2*cos((theta + 5)*PI / 180);
+			z1 = yMax1*sin(theta*PI/180);
+			z3 = yMax1*sin((theta+5)*PI / 180);
+
+			z2 = yMax2*sin((theta)*PI/180);
+			z4 = yMax2*sin((theta+5)*PI / 180);
+
+			//cout << "______" << yMax1 << "\t" << yMax2 << "-----\n";
+			
+			//cout <<"_______"<<x<<"\t"<<theta+10<<"\t"<< y1 << "\t" << y2 << "\t" << z1 << "\t" << z2 <<"-----"<< "\n";
+
+			v2.x = x;
+			v2.y = y1;
+			v2.z = z1;
+
+			v1.x = x +0.01;
+			v1.y = y2;
+			v1.z = z2;
+
+			v3.x = x +0.01;
+			v3.y = y4;
+			v3.z = z4;
+			
+			glBegin(GL_QUADS);
+
+			glColor3f(0.0f,1.0f,0.0f);
+			computeNormals(v1,v2,v3);
+			
+			glVertex3f(x,y1,z1);
+			glVertex3f(x+0.01, y2, z2);
+			glVertex3f(x + 0.01, y4, z4);
+			glVertex3f(x,y3,z3);
+			
+			glEnd();
+
+		}
+	}
+
+	glPopMatrix();
+
+
+}
+
+void initRendering() {
+	/*glViewport(0,0,w,h);
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluPerspective(50,(float)w/(float)h,5,2000);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	*/
+	glEnable(GL_DEPTH_TEST);
+
+	GLfloat global_ambient[4] = { 0.9f, 0.9f, 0.9f, 1.0f };
+	GLfloat light0pos[4] = { -9.0f, 10.0f, 10.0f, 1.0f };
+	GLfloat light0ambient[4] = { 0.2f, 0.2f, 0.2f, 1.0f };
+	GLfloat light0diffuse[4] = { 0.3f, 0.3f, 0.3f, 1.0f };
+	GLfloat light0specular[4] = { 0.8f, 0.8f, 0.8f, 1.0f };
+
+	GLfloat lmodel_ambient[] = { 0.2f, 0.2f, 0.2f, 1.0f };
+	glLightModelfv(GL_LIGHT_MODEL_AMBIENT, lmodel_ambient);
+
+	glLightModelfv(GL_LIGHT_MODEL_AMBIENT, global_ambient);
+	glLightfv(GL_LIGHT0, GL_POSITION, light0pos);
+	glLightfv(GL_LIGHT0, GL_AMBIENT, light0ambient);
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, light0diffuse);
+	glLightfv(GL_LIGHT0, GL_SPECULAR, light0specular);
+
+	glEnable(GL_LIGHTING);
+	glEnable(GL_LIGHT0);
+	//	glEnable(GL_NORMALIZE);
+
+	glShadeModel(GL_SMOOTH);
+
+	glMateriali(GL_FRONT, GL_SHININESS, 128);
+	glClearColor(0.0f, 0.0f, 0.0f, 0.5);
+
+
+
+	glEnable(GL_COLOR_MATERIAL);
+
+
+}
+
+void handleResize(int w, int h) {
+	/*glViewport(0, 0, w, h);
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	//gluPerspective(45.0, (float)w / (float)h, 1.0, 200.0);
+
+	glOrtho(0,640,480,0,-1,1);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	*/
+
+	glViewport(0, 0, w, h);
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluPerspective(50, (float)w / (float)h, 1, 200);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+
+}
+
+void drawScene() {
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+
+
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+
+	glTranslatef(0.0f, 1.0f, -6.0f);
+
+	GLfloat ambientLight[] = { 0.2f, 0.2f, 0.2f, 1.0f };
+	glLightModelfv(GL_LIGHT_MODEL_AMBIENT, ambientLight);
+
+	GLfloat directedLight[] = { 0.7f, 0.7f, 0.7f, 1.0f };
+	GLfloat directedLightPos[] = { -10.0f, 15.0f, 20.0f, 0.0f };
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, directedLight);
+	glLightfv(GL_LIGHT0, GL_POSITION, directedLightPos);
+
+	glColor3f(1.0f, 0.0f, 0.0f);
+	drawHelix();
+
+	glFlush();
+	glutSwapBuffers();
+}
+
+/*void update(int value)
+{
+angle += 10.0;
+glutPostRedisplay();
+glutTimerFunc(10,update,1);
+}
+*/
+int main(int argc, char** argv) {
+	glutInit(&argc, argv);
+	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
+	glutInitWindowSize(800, 600);
+
+	glutCreateWindow("Function curve");
+	initRendering();
+
+	glutDisplayFunc(drawScene);
+	glutKeyboardFunc(handleKeypress);
+	glutReshapeFunc(handleResize);
+	//glutTimerFunc(25,update,1);
+	glutMainLoop();
+	return 0;
+}
+
+
+
+
+
+
+
+
+
